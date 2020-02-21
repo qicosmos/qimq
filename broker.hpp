@@ -33,13 +33,15 @@ namespace qimq {
 			if (result.code != 0) {
 				std::cout << "pull error\n";
 			}
-			std::cout << "message: key: " << key << " has been got by consumer\n";
+			std::cout << "key: " << key << " has been got by consumer\n";
 		}
 
 		void consume_ack(rpc_conn conn, std::string key, consume_result result) {
 			if (result.code != 0) {
 				std::cout << "consume error\n";
 			}
+
+			std::cout << "msg has been consumed\n";
 
 			bool r = store_.remove(key);
 			if (r) {
