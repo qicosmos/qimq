@@ -13,23 +13,48 @@ namespace qimq {
 			init();
 		}
 
-		rpc_server& get_rpc_server() {
-			return rpc_server_;
-		}
-
 		void run() {
 			rpc_server_.run();
 		}
 
-		publish_result pulish(rpc_conn conn, std::string key, std::string val) {
-			//先落地再应答
-			store_.add(key, val);
-			publish_result result{ 200 };
+		send_result send_msg(rpc_conn conn, std::string key, std::string val) {
+			bool r = store_.add(key, val);
+			int code = r ? 200 : 500;
+			send_result result{ code };
 			return result;
+		}
+
+		std::string pull(rpc_conn conn, std::string key) {
+			auto& val = store_.get(key);
+			return val;
+		}
+
+		void pull_ack(rpc_conn conn, std::string key, consume_result result) {
+			if (result.code != 0) {
+				std::cout << "pull error\n";
+			}
+			std::cout << "message: key: " << key << " has been got by consumer\n";
+		}
+
+		void consume_ack(rpc_conn conn, std::string key, consume_result result) {
+			if (result.code != 0) {
+				std::cout << "consume error\n";
+			}
+
+			bool r = store_.remove(key);
+			if (r) {
+				std::cout << "remove key: "<<key<<" ok\n";
+			}
+			else {
+				std::cout << "remove key: " << key << " failed\n";
+			}
 		}
 	private:
 		void init() {
-			rpc_server_.register_handler("publish", &broker_t::pulish, this);
+			rpc_server_.register_handler("send_msg", &broker_t::send_msg, this);
+			rpc_server_.register_handler("pull", &broker_t::pull, this);
+			rpc_server_.register_handler("pull_ack", &broker_t::pull_ack, this);
+			rpc_server_.register_handler("consume_ack", &broker_t::consume_ack, this);
 		}
 
 		rpc_server rpc_server_;
