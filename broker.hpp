@@ -6,6 +6,7 @@ using namespace rest_rpc;
 using namespace rpc_service;
 
 namespace qimq {
+	template<typename T = mem_storage>
 	class broker_t {
 	public:
 		broker_t(short port, size_t size, size_t timeout_seconds = 15, 
@@ -19,7 +20,7 @@ namespace qimq {
 
 		send_result send_msg(rpc_conn conn, std::string key, std::string val) {
 			bool r = store_.add(key, val);
-			int code = r ? 200 : 500;
+			int code = r ? error_code::add_ok : error_code::add_failed;
 			send_result result{ code };
 			return result;
 		}
@@ -60,6 +61,6 @@ namespace qimq {
 		}
 
 		rpc_server rpc_server_;
-		mem_storage store_;
+		T store_;
 	};
 }

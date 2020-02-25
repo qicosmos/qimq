@@ -10,7 +10,7 @@ namespace qimq {
 
 		[[nodiscard]] bool add(std::string key, std::string val) {
 			std::unique_lock lock(mtx_);
-			map_.emplace(key, val);
+			map_.emplace(std::move(key), std::move(val));
 			return true;
 		}
 

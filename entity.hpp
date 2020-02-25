@@ -13,4 +13,11 @@ namespace qimq {
 	using pull_result = send_result;
 
 	using consume_result = send_result;
+
+	enum error_code {
+		ok = 0,
+		add_failed,
+		at_capacity,
+
+	};
 }
