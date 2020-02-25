@@ -4,11 +4,18 @@
 namespace qimq {
 	struct send_result {
 		int code;
+		int64_t msg_id;
 		std::string data;
 		std::string msg;
 
-		MSGPACK_DEFINE(code, data, msg);
+		MSGPACK_DEFINE(code, msg_id, data, msg);
 	};
+
+	//struct message_t {
+	//	int64_t msg_id;
+	//	std::string msg;
+	//	MSGPACK_DEFINE(msg_id, msg);
+	//};
 
 	using pull_result = send_result;
 

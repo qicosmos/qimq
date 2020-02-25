@@ -18,26 +18,31 @@ namespace qimq {
 			rpc_server_.run();
 		}
 
-		send_result send_msg(rpc_conn conn, std::string key, std::string val) {
+		send_result send_msg(rpc_conn conn, int64_t key, std::string val) {
+			if (store_.has(key)) {
+				send_result result{ error_code::ok, key };
+				return result;
+			}
+
 			bool r = store_.add(key, val);
-			int code = r ? error_code::add_ok : error_code::add_failed;
-			send_result result{ code };
+			int code = r ? error_code::ok : error_code::add_failed;
+			send_result result{ code, ++msg_id_ };
 			return result;
 		}
 
-		std::string pull(rpc_conn conn, std::string key) {
+		std::string pull(rpc_conn conn, int64_t key) {
 			auto& val = store_.get(key);
 			return val;
 		}
 
-		void pull_ack(rpc_conn conn, std::string key, consume_result result) {
+		void pull_ack(rpc_conn conn, int64_t key, consume_result result) {
 			if (result.code != 0) {
 				std::cout << "pull error\n";
 			}
 			std::cout << "key: " << key << " has been got by consumer\n";
 		}
 
-		void consume_ack(rpc_conn conn, std::string key, consume_result result) {
+		void consume_ack(rpc_conn conn, int64_t key, consume_result result) {
 			if (result.code != 0) {
 				std::cout << "consume error\n";
 			}
@@ -62,5 +67,6 @@ namespace qimq {
 
 		rpc_server rpc_server_;
 		T store_;
+		std::atomic<std::int64_t> msg_id_ = store_.empty() ? 1 : store_.size();
 	};
 }
