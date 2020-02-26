@@ -41,7 +41,7 @@ namespace qimq {
 
 		[[nodiscard]] bool has(const int64_t& key) {
 			std::unique_lock lock(mtx_);
-			return map_.find(key) == map_.end();
+			return map_.find(key) != map_.end();
 		}
 
 	private:
