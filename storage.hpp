@@ -5,7 +5,7 @@ namespace qimq {
 	template <class Derived, typename T>
 	class storage_t {
 	public:
-		bool add(const int64_t& key, T val) {
+		int add(const int64_t& key, T val) {
 			return static_cast<Derived*>(this)->add(key, val);
 		}
 

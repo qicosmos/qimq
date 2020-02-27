@@ -25,13 +25,7 @@ namespace qimq {
 		}
 
 		send_result send_msg(rpc_conn conn, int64_t msg_id, std::string val) {
-			if (store_.has(msg_id)) {
-				send_result result{ error_code::ok, msg_id };
-				return result;
-			}
-
-			bool r = store_.add(msg_id_, val);
-			int code = r ? error_code::ok : error_code::add_failed;
+			auto code = store_.add(msg_id_, val);
 			send_result result{ code, msg_id_++ };
 			return result;
 		}

@@ -8,10 +8,15 @@ namespace qimq {
 	class mem_storage : public storage_t<mem_storage, std::string> {
 	public:
 
-		[[nodiscard]] bool add(const int64_t& key, std::string val) {
+		[[nodiscard]] error_code add(const int64_t& key, std::string val) {
 			std::unique_lock lock(mtx_);
+            auto it = map_.find(key);
+            if(it==map_.end()){
+                return error_code::has_exist;
+            }
+
 			map_.emplace(std::move(key), std::move(val));
-			return true;
+			return error_code::ok;
 		}
 
 		std::string& get(const int64_t& key) {

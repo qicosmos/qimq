@@ -23,6 +23,7 @@ namespace qimq {
 
 	enum error_code {
 		ok = 0,
+		has_exist,
 		add_failed,
 		at_capacity,
 
