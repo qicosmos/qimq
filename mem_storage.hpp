@@ -1,5 +1,5 @@
 #pragma once
-#include <mutex>
+#include <shared_mutex>
 #include <map>
 #include "storage.hpp"
 
@@ -45,7 +45,7 @@ namespace qimq {
 		}
 
 	private:
-		std::mutex mtx_;
+		std::shared_mutex mtx_;
 		std::map<int64_t, std::string> map_;
 	};
 }
