@@ -1,5 +1,6 @@
 #pragma once
 #include <rpc_server.h>
+#include <shared_mutex>
 #include "entity.hpp"
 #include "mem_storage.hpp"
 using namespace rest_rpc;
@@ -44,9 +45,13 @@ namespace qimq {
 		}
 
 		void start_wait_ack(rpc_conn conn, int64_t msg_id, std::string client_id, const std::string& val) {
-			std::shared_ptr<wait_t> wait = std::make_shared<wait_t>(ios_, 1000);
+			std::shared_ptr<wait_t> wait = std::make_shared<wait_t>(ios_, 5000);
 			std::weak_ptr<wait_t> wp(wait);
-			wait_ack_map_.emplace(msg_id, wait);
+			{
+				std::unique_lock lock(wait_mtx_);
+				wait_ack_map_.emplace(msg_id, wait);
+			}
+
 			wait->set_callback([this, conn, wp, msg_id, &val, client_id = std::move(client_id)](int try_times) {
 				if (try_times <= 5) {
 					auto call = wp.lock();
@@ -58,7 +63,7 @@ namespace qimq {
 							rpc_server_.publish_by_token("pull", std::move(client_id), send_result{ok, msg_id, val});
 							call->start_timer();
 						}
-					}					
+					}
 				}
 				else {
 					std::cout << "retry 5 times failed\n";
@@ -68,15 +73,24 @@ namespace qimq {
 		}
 
 		void pull_ack(rpc_conn conn, int64_t msg_id, consume_result result) {
-			auto it = wait_ack_map_.find(msg_id);
-			if (it == wait_ack_map_.end()) {
-				//the msg_id is not exist
-				return;
+			decltype(wait_ack_map_.begin()) it;
+
+			{
+				std::unique_lock lock(wait_mtx_);
+				it = wait_ack_map_.find(msg_id);
+				if (it == wait_ack_map_.end()) {
+					//the msg_id is not exist
+					return;
+				}
 			}
 
 			auto wait = it->second.lock();
 			wait->cancel();
-			wait_ack_map_.erase(it);
+
+			{
+				std::unique_lock lock(wait_mtx_);
+				wait_ack_map_.erase(it);
+			}			
 
 			if (result.code != 0) {
 				std::cout << "pull error\n";
@@ -183,5 +197,6 @@ namespace qimq {
 		boost::asio::io_service::work worker_;
 		std::thread wait_thd_;
 		std::unordered_map<std::uint64_t, std::weak_ptr<wait_t>> wait_ack_map_;
+		std::shared_mutex wait_mtx_;
 	};
 }
