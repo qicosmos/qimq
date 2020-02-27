@@ -11,7 +11,7 @@ namespace qimq {
 		[[nodiscard]] error_code add(const int64_t& key, std::string val) {
 			std::unique_lock lock(mtx_);
             auto it = map_.find(key);
-            if(it==map_.end()){
+            if(it!= map_.end()){
                 return error_code::has_exist;
             }
 
