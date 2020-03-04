@@ -15,6 +15,10 @@ namespace qimq {
 #ifdef USE_ROCKSDB
 	class file_storage : public storage_t<file_storage, std::string> {
 	public:
+		~file_storage() {
+			delete db_;
+		}
+
 		file_storage() {
 			Options options;
 			// Optimize RocksDB. This is the easiest way to get RocksDB to perform well
@@ -40,7 +44,7 @@ namespace qimq {
 				return error_code::has_exist;
 			}
 
-			auto s = db_->Put(options_, temp, std::move(val));
+			auto s = db_->Put(w_options_, temp, std::move(val));
 			return s.ok() ? error_code::ok : error_code::add_failed;
 		}
 
@@ -61,13 +65,13 @@ namespace qimq {
 			char temp[20];
 			i64toa_jeaiii(key, temp);
 
-			auto s = db_->Delete({}, temp);
+			auto s = db_->Delete(w_options_, temp);
 			return s.ok();
 		}
 
 		[[nodiscard]] int64_t size() {
 			int64_t size = 0;
-			rocksdb::Iterator* it = db_->NewIterator({});
+			rocksdb::Iterator* it = db_->NewIterator(r_options_);
 			for (it->SeekToFirst(); it->Valid(); it->Next()) {
 				size++;
 				//cout << it->key().ToString() << ": " << it->value().ToString() << endl;
@@ -78,7 +82,7 @@ namespace qimq {
 		}
 
 		[[nodiscard]] bool empty() {
-			rocksdb::Iterator* it = db_->NewIterator({});
+			rocksdb::Iterator* it = db_->NewIterator(r_options_);
 			it->SeekToFirst();
 			bool is_empty = !(it->Valid());
 			delete it;
@@ -97,7 +101,8 @@ namespace qimq {
 	private:
 		//std::shared_mutex mtx_;
 		DB* db_;
-		WriteOptions options_{};
+		const WriteOptions w_options_{};
+		const rocksdb::ReadOptions r_options_{};
 	};
 #endif // USE_ROCKSDB
 }
