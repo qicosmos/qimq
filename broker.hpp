@@ -3,6 +3,7 @@
 #include <shared_mutex>
 #include "entity.hpp"
 #include "mem_storage.hpp"
+#include "file_storage.hpp"
 using namespace rest_rpc;
 using namespace rpc_service;
 

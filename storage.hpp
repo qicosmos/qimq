@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include "entity.hpp"
 
 namespace qimq {
 	template <class Derived, typename T>

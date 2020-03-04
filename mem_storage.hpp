@@ -2,9 +2,9 @@
 #include <shared_mutex>
 #include <map>
 #include "storage.hpp"
+#include "consts.h"
 
-namespace qimq {
-	static std::string EMPTY_STR = "";
+namespace qimq {	
 	class mem_storage : public storage_t<mem_storage, std::string> {
 	public:
 
